@@ -73,12 +73,20 @@ def gen():
 
 
 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///students.db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+# app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///students.db'
+# app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+# db = SQLAlchemy(app)
+# app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///books.db'
+# app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+# db1 = SQLAlchemy(app)
+
+app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///students.db"
+app.config["SQLALCHEMY_BINDS"] = {
+    "books": "sqlite:///books.db",
+}
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+
 db = SQLAlchemy(app)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///books.db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-db1 = SQLAlchemy(app)
 
 class Students(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -96,19 +104,32 @@ class Students(db.Model):
     volunteer_email = db.Column(db.String(250), nullable=False)
 
 
-class Books(db1.Model):
-    id = db1.Column(db.Integer, primary_key=True)
-    isbn = db1.Column(db.String(250), nullable=True)
-    title = db1.Column(db.String(250), nullable=True)
-    genre = db1.Column(db.String(250), nullable=True)
-    level = db1.Column(db.String(250), nullable=True)
-    rating = db1.Column(db.String(250), nullable=True)
-    reads = db1.Column(db.String(250), nullable=True)
-    age_group = db1.Column(db.String(250), nullable=True)
-    image = db1.Column(db.String(250), nullable=True)
+# class Books(db1.Model):
+#     id = db1.Column(db.Integer, primary_key=True)
+#     isbn = db1.Column(db.String(250), nullable=True)
+#     title = db1.Column(db.String(250), nullable=True)
+#     genre = db1.Column(db.String(250), nullable=True)
+#     level = db1.Column(db.String(250), nullable=True)
+#     rating = db1.Column(db.String(250), nullable=True)
+#     reads = db1.Column(db.String(250), nullable=True)
+#     age_group = db1.Column(db.String(250), nullable=True)
+#     image = db1.Column(db.String(250), nullable=True)
 
+class Books(db.Model):
+    __bind_key__ = "books"
 
-db1.create_all()
+    id = db.Column(db.Integer, primary_key=True)
+    isbn = db.Column(db.String(250), nullable=True)
+    title = db.Column(db.String(250), nullable=True)
+    genre = db.Column(db.String(250), nullable=True)
+    level = db.Column(db.String(250), nullable=True)
+    rating = db.Column(db.String(250), nullable=True)
+    reads = db.Column(db.String(250), nullable=True)
+    age_group = db.Column(db.String(250), nullable=True)
+    image = db.Column(db.String(250), nullable=True)
+
+with app.app_context():
+    db.create_all()
 
 
 class Evaluation(db.Model):
@@ -352,8 +373,8 @@ def add_book(data):
             age_group=form.age_group.data,
             image=form.image.data
         )
-        db1.session.add(new_book)
-        db1.session.commit()
+        db.session.add(new_book)
+        db.session.commit()
         return redirect(url_for("books"))
     return render_template("add-book.html", form=form, heading="Add Book")
 
